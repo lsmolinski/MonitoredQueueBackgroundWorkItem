@@ -180,7 +180,7 @@ namespace MonitoredQueueBackgroundWorkItem
 
     public class SomeTaskType01 : BaseTask
     {
-        private string _productText;
+        private long _someProduct;
 
         private long _inputData;
 
@@ -192,7 +192,7 @@ namespace MonitoredQueueBackgroundWorkItem
 
         public override object GetProduct()
         {
-            return this._productText;
+            return this._someProduct;
         }
 
         protected override void SetAction()
@@ -214,7 +214,7 @@ namespace MonitoredQueueBackgroundWorkItem
 
             var end = DateTime.Now;
 
-            _productText = string.Format("InputData: {4}. Start: {0}, End: {1}, Rnd: {2}, TaskId {3}", start, end, sleepTime, this.TaskID, this._inputData);
+            this._someProduct = string.Format("InputData: {4}. Start: {0}, End: {1}, Rnd: {2}, TaskId {3}", start, end, sleepTime, this.TaskID, this._inputData).Length;
 
             Console.WriteLine("SomeTaskType01 {0} EndAt: {1}.", this.TaskID, end);
         }

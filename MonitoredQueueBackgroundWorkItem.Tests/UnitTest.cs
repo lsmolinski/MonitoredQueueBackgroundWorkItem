@@ -41,7 +41,7 @@ namespace Tests
 
             foreach (var t in list)
             {
-                Assert.IsNotNull(t.GetProduct() as string);
+                Assert.Greater((long)t.GetProduct(), 0);
             }
         }
 
