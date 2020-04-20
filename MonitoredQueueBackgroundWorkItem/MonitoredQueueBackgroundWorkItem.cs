@@ -101,7 +101,7 @@ namespace MonitoredQueueBackgroundWorkItem
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (_counter > _maxDequeueCountPerMin) // allow 80 action per minute
+                if (_counter > _maxDequeueCountPerMin) // allow start 80 action per minute
                 {
                     string msg = string.Format("SKIPPED queued action counter: {0}. In Queue: {1}. MaxCounter: {2}.", _counter, TaskQueue.Count(), _maxDequeueCountPerMin);
                     _logger.LogInformation(msg);
