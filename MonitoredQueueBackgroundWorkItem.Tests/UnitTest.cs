@@ -28,7 +28,7 @@ namespace Tests
             System.Collections.Concurrent.ConcurrentBag<BaseTask> list = new System.Collections.Concurrent.ConcurrentBag<BaseTask>();
             for (int i = 0; i < 120; i++)
             {
-                BaseTask baseTask = new SomeTaskType01();
+                BaseTask baseTask = new SomeTaskType01(i);
                 this._backgroundQueue.QueueBackgroundWorkItem(baseTask);
                 list.Add(baseTask);
             }
