@@ -58,6 +58,16 @@ namespace MonitoredQueueBackgroundWorkItem
 
         private long _counter;
 
+        private long GetValueCounter()
+        {
+            long copy = 0;
+            lock (_countLocker)
+            {
+                copy = _counter;
+                return copy;
+            }
+        }
+
         private void IncreaseCounter(long value)
         {
             lock (_countLocker)
@@ -101,7 +111,7 @@ namespace MonitoredQueueBackgroundWorkItem
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (_counter > _maxDequeueCountPerMin) // allow start 80 action per minute
+                if (this.GetValueCounter() > _maxDequeueCountPerMin) // allow start 80 action per minute
                 {
                     string msg = string.Format("SKIPPED queued action counter: {0}. In Queue: {1}. MaxCounter: {2}.", _counter, TaskQueue.Count(), _maxDequeueCountPerMin);
                     _logger.LogInformation(msg);
@@ -128,13 +138,22 @@ namespace MonitoredQueueBackgroundWorkItem
         protected Action _action;
         private Task _task;
 
+        private object _taskLocker = new object();
+        private object _isStartedInitLocker = new object();
+
+
         private long _owner;
 
         public int TaskID
         {
             get
             {
-                return _task.Id;
+                int toReturn = 0;
+                lock (_taskLocker)
+                {
+                    toReturn = _task.Id;
+                }
+                return toReturn;
             }
         }
 
@@ -146,7 +165,10 @@ namespace MonitoredQueueBackgroundWorkItem
         protected void Init()
         {
             SetAction();
-            _isStartInicialized = false;
+            lock (_isStartedInitLocker)
+            {
+                this._isStartInicialized = false;
+            }
             _task = new Task(_action);
         }
 
@@ -156,23 +178,51 @@ namespace MonitoredQueueBackgroundWorkItem
 
         public bool IsStartInicialized
         {
-            get { return _isStartInicialized; }
+            // TODO: use lock
+            get
+            {
+                bool toReturn = false;
+
+                lock (_isStartedInitLocker)
+                {
+                    toReturn = this._isStartInicialized;
+                }
+
+                return toReturn;
+            }
         }
 
         public bool IsCompleted
         {
-            get { return this._task.IsCompleted; }
+            get
+            {
+                bool toReturn = false;
+                lock (_taskLocker)
+                {
+                    toReturn = this._task.IsCompleted;
+                }
+                return toReturn;
+            }
         }
 
-        public void Start()
+        internal protected void Start()
         {
-            this._isStartInicialized = true;
-            this._task.Start();
+            lock (this._isStartedInitLocker)
+            {
+                this._isStartInicialized = true;
+            }
+            lock (_taskLocker)
+            {
+                this._task.Start();
+            }
         }
 
         public void Wait()
         {
-            this._task.Wait();
+            lock (_taskLocker)
+            {
+                this._task.Wait();
+            }
         }
 
         public abstract object GetProduct();
